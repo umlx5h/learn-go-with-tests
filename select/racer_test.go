@@ -21,7 +21,7 @@ func TestRacer(t *testing.T) {
 		fastURL := fastServer.URL
 
 		want := fastURL
-		got, err := Racer3(slowURL, fastURL, time.Second)
+		got, err := Racer3(slowURL, fastURL)
 
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
@@ -30,13 +30,12 @@ func TestRacer(t *testing.T) {
 	})
 
 	t.Run("timeout server", func(t *testing.T) {
-		timeoutServer := makeDelayedServer(2 * time.Second)
-		timeout2Server := makeDelayedServer(3 * time.Second)
+		timeoutServer := makeDelayedServer(60 * time.Millisecond)
+		timeout2Server := makeDelayedServer(70 * time.Millisecond)
 
-		_, err := Racer3(timeoutServer.URL, timeout2Server.URL, time.Millisecond*30)
+		_, err := ConfigurableRacer(timeoutServer.URL, timeout2Server.URL, time.Millisecond*50)
 
 		assert.Error(t, err, "must be timed out")
-
 	})
 
 }

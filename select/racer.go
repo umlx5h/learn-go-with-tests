@@ -52,7 +52,13 @@ func measureResponseTime(url string) time.Duration {
 	return time.Since(start)
 }
 
-func Racer3(a, b string, timeout time.Duration) (winner string, e error) {
+var tenSecondTimeout = 10 * time.Second
+
+func Racer3(a, b string) (winner string, e error) {
+	return ConfigurableRacer(a, b, tenSecondTimeout)
+}
+
+func ConfigurableRacer(a, b string, timeout time.Duration) (winner string, e error) {
 	select {
 	case <-ping(a):
 		return a, nil
@@ -60,7 +66,6 @@ func Racer3(a, b string, timeout time.Duration) (winner string, e error) {
 		return b, nil
 	case <-time.After(timeout):
 		return "", errors.New("timeout exceeded")
-
 	}
 }
 
