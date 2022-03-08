@@ -4,9 +4,6 @@ import (
 	"io/fs"
 )
 
-type Post struct {
-}
-
 func NewPostsFromFS(fileSystem fs.FS) ([]Post, error) {
 	dir, err := fs.ReadDir(fileSystem, ".")
 	if err != nil {
@@ -14,9 +11,24 @@ func NewPostsFromFS(fileSystem fs.FS) ([]Post, error) {
 	}
 
 	var posts []Post
-	for range dir {
-		posts = append(posts, Post{})
+	for _, f := range dir {
+		post, err := getPost(fileSystem, f.Name())
+		if err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
+	}
+	return posts, nil
+}
+
+func getPost(fileSystem fs.FS, fileName string) (Post, error) {
+	postFile, err := fileSystem.Open(fileName)
+	if err != nil {
+		return Post{}, err
 	}
 
-	return posts, nil
+	defer postFile.Close()
+
+	return newPost(postFile)
 }

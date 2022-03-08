@@ -2,8 +2,8 @@ package blogposts_test
 
 import (
 	"errors"
-	"fmt"
 	"io/fs"
+	"reflect"
 	"testing"
 	"testing/fstest"
 
@@ -20,17 +20,58 @@ func (s StubFailingFS) Open(name string) (fs.File, error) {
 }
 
 func TestNewBlogPosts(t *testing.T) {
+	const (
+		firstBody = `Title: Post 1
+Description: Description 1
+Tags: tdd, go
+---
+Hello
+World
+`
+		secondBody = `Title: Post 2
+Description: Description 2
+Tags: rust, borrow-checker
+---
+K
+M
+R`
+	)
+
 	fs := fstest.MapFS{
-		"hello world.md":  {Data: []byte("hi")},
-		"hello-world2.md": {Data: []byte("hola")},
+		"hello world.md":  {Data: []byte(firstBody)},
+		"hello-world2.md": {Data: []byte(secondBody)},
 	}
 
-	posts, err := blogposts.NewPostsFromFS(fs)
+	t.Run("post counts", func(t *testing.T) {
+		posts, err := blogposts.NewPostsFromFS(fs)
+		require.NoError(t, err)
+		assert.Equal(t, len(fs), len(posts), "read from folder and count post num")
+	})
 
-	require.NoError(t, err)
+	t.Run("error post created", func(t *testing.T) {
+		_, err := blogposts.NewPostsFromFS(StubFailingFS{})
+		assert.Error(t, err)
+	})
 
-	assert.Equal(t, len(fs), len(posts), "read from folder and count post num")
+	t.Run("post created", func(t *testing.T) {
+		posts, err := blogposts.NewPostsFromFS(fs)
+		require.NoError(t, err)
 
-	_, err = blogposts.NewPostsFromFS(StubFailingFS{})
-	fmt.Println(err)
+		got := posts[0]
+		want := blogposts.Post{
+			Title:       "Post 1",
+			Description: "Description 1",
+			Tags:        []string{"tdd", "go"},
+			Body:        "Hello\nWorld"}
+
+		assert.Equal(t, want, got)
+	})
+
+}
+
+func assertPost(t *testing.T, got blogposts.Post, want blogposts.Post) {
+	t.Helper()
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %+v, want %+v", got, want)
+	}
 }
