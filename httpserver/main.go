@@ -5,10 +5,13 @@ import (
 	"net/http"
 )
 
-type InMemoryPlayerStore struct{}
+type InMemoryPlayerStore struct {
+}
 
-func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
-	return 123
+func (i *InMemoryPlayerStore) GetPlayerScore(name string) (int, error) {
+	return 123, nil
+}
+func (i *InMemoryPlayerStore) RecordWin(name string) {
 }
 
 func main() {
