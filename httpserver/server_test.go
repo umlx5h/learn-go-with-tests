@@ -84,7 +84,8 @@ func TestGETPalyers(t *testing.T) {
 
 func TestStoreWins(t *testing.T) {
 	store := &StubPlayerStore{
-		scores: map[string]int{},
+		scores:   map[string]int{},
+		winCalls: nil,
 	}
 
 	server := &PlayerServer{store: store}
@@ -96,6 +97,9 @@ func TestStoreWins(t *testing.T) {
 		server.ServeHTTP(response, request)
 
 		assert.Equal(t, http.StatusAccepted, response.Code)
+
+		require.Equal(t, 1, len(store.winCalls))
+		assert.Equal(t, "Pepper", store.winCalls[0])
 	})
 
 }
