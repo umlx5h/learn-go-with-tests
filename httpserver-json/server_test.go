@@ -124,11 +124,11 @@ func TestLeague(t *testing.T) {
 		request := newLeagueRequest()
 		response := httptest.NewRecorder()
 
-		// if response.Result().Header.Get("content-type") != jsonContentType {
-		// 	t.Errorf("response did not have content-type of application/json, got %v", response.Result().Header)
-		// }
-
 		server.ServeHTTP(response, request)
+
+		if response.Result().Header.Get("content-type") != jsonContentType {
+			t.Errorf("response did not have content-type of application/json, got %v", response.Result().Header)
+		}
 		require.Equal(t, http.StatusOK, response.Code)
 
 		got := getLeagueFromResponse(t, response.Body)

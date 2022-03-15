@@ -20,11 +20,28 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
 		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
 
-		response := httptest.NewRecorder()
-		server.ServeHTTP(response, newGetScoreRequest(player))
+		t.Run("get score", func(t *testing.T) {
+			response := httptest.NewRecorder()
+			server.ServeHTTP(response, newGetScoreRequest(player))
 
-		assert.Equal(t, http.StatusOK, response.Code)
-		assert.Equal(t, "3", response.Body.String())
+			assert.Equal(t, http.StatusOK, response.Code)
+			assert.Equal(t, "3", response.Body.String())
+		})
+
+		t.Run("get league", func(t *testing.T) {
+			response := httptest.NewRecorder()
+			server.ServeHTTP(response, newLeagueRequest())
+
+			assert.Equal(t, http.StatusOK, response.Code)
+
+			got := getLeagueFromResponse(t, response.Body)
+			want := []Player{
+				{"Pepper", 3},
+			}
+
+			assert.Equal(t, want, got)
+
+		})
 	})
 
 	t.Run("concurrently", func(t *testing.T) {
