@@ -13,7 +13,7 @@ import (
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 	t.Run("sync", func(t *testing.T) {
 		store := NewInMemoryPlayerStore()
-		server := PlayerServer{store: store}
+		server := NewPlayerServer(store)
 		player := "Pepper"
 
 		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
@@ -29,7 +29,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 
 	t.Run("concurrently", func(t *testing.T) {
 		store := NewInMemoryPlayerStore()
-		server := PlayerServer{store: store}
+		server := NewPlayerServer(store)
 		player := "Pepper"
 
 		num := 1000

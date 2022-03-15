@@ -7,7 +7,7 @@ import (
 
 func main() {
 	// handler := http.HandlerFunc(PlayerServer)
-	server := &PlayerServer{store: NewInMemoryPlayerStore()}
+	server := NewPlayerServer(NewInMemoryPlayerStore())
 
 	// http.Handle("/score", handler)
 	// log.Fatal(http.ListenAndServe(":5555", nil))
