@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 )
 
@@ -14,14 +15,14 @@ func (f *FileSystemPlayerStore) GetLeague() League {
 	return league
 }
 
-func (f *FileSystemPlayerStore) GetPlayerScore(name string) int {
+func (f *FileSystemPlayerStore) GetPlayerScore(name string) (int, error) {
 	player := f.GetLeague().Find(name)
 
 	if player != nil {
-		return player.Wins
+		return player.Wins, nil
 	}
 
-	return 0
+	return 0, fmt.Errorf("no such player")
 }
 
 func (f *FileSystemPlayerStore) RecordWin(name string) {
@@ -30,6 +31,11 @@ func (f *FileSystemPlayerStore) RecordWin(name string) {
 
 	if player != nil {
 		player.Wins++
+	} else {
+		league = append(league, Player{
+			Name: name,
+			Wins: 1,
+		})
 	}
 
 	f.database.Seek(0, 0)

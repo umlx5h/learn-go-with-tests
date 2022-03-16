@@ -14,7 +14,7 @@ const (
 type PlayerStore interface {
 	GetPlayerScore(name string) (int, error)
 	RecordWin(name string)
-	GetLeague() []Player
+	GetLeague() League
 }
 
 type PlayerServer struct {
