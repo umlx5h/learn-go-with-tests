@@ -1,71 +1,71 @@
 package main
 
-import (
-	"net/http"
-	"net/http/httptest"
-	"strconv"
-	"sync"
-	"testing"
+// import (
+// 	"net/http"
+// 	"net/http/httptest"
+// 	"strconv"
+// 	"sync"
+// 	"testing"
 
-	"github.com/stretchr/testify/assert"
-)
+// 	"github.com/stretchr/testify/assert"
+// )
 
-func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	t.Run("sync", func(t *testing.T) {
-		store := NewInMemoryPlayerStore()
-		server := NewPlayerServer(store)
-		player := "Pepper"
+// func TestRecordingWinsAndRetrievingThem(t *testing.T) {
+// 	t.Run("sync", func(t *testing.T) {
+// 		store := NewInMemoryPlayerStore()
+// 		server := NewPlayerServer(store)
+// 		player := "Pepper"
 
-		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+// 		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+// 		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+// 		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
 
-		t.Run("get score", func(t *testing.T) {
-			response := httptest.NewRecorder()
-			server.ServeHTTP(response, newGetScoreRequest(player))
+// 		t.Run("get score", func(t *testing.T) {
+// 			response := httptest.NewRecorder()
+// 			server.ServeHTTP(response, newGetScoreRequest(player))
 
-			assert.Equal(t, http.StatusOK, response.Code)
-			assert.Equal(t, "3", response.Body.String())
-		})
+// 			assert.Equal(t, http.StatusOK, response.Code)
+// 			assert.Equal(t, "3", response.Body.String())
+// 		})
 
-		t.Run("get league", func(t *testing.T) {
-			response := httptest.NewRecorder()
-			server.ServeHTTP(response, newLeagueRequest())
+// 		t.Run("get league", func(t *testing.T) {
+// 			response := httptest.NewRecorder()
+// 			server.ServeHTTP(response, newLeagueRequest())
 
-			assert.Equal(t, http.StatusOK, response.Code)
+// 			assert.Equal(t, http.StatusOK, response.Code)
 
-			got := getLeagueFromResponse(t, response.Body)
-			want := []Player{
-				{"Pepper", 3},
-			}
+// 			got := getLeagueFromResponse(t, response.Body)
+// 			want := []Player{
+// 				{"Pepper", 3},
+// 			}
 
-			assert.Equal(t, want, got)
+// 			assert.Equal(t, want, got)
 
-		})
-	})
+// 		})
+// 	})
 
-	t.Run("concurrently", func(t *testing.T) {
-		store := NewInMemoryPlayerStore()
-		server := NewPlayerServer(store)
-		player := "Pepper"
+// 	t.Run("concurrently", func(t *testing.T) {
+// 		store := NewInMemoryPlayerStore()
+// 		server := NewPlayerServer(store)
+// 		player := "Pepper"
 
-		num := 1000
+// 		num := 1000
 
-		var wg sync.WaitGroup
-		wg.Add(num)
-		for i := 0; i < num; i++ {
-			go func() {
-				defer wg.Done()
-				server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-			}()
-		}
+// 		var wg sync.WaitGroup
+// 		wg.Add(num)
+// 		for i := 0; i < num; i++ {
+// 			go func() {
+// 				defer wg.Done()
+// 				server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+// 			}()
+// 		}
 
-		wg.Wait()
+// 		wg.Wait()
 
-		response := httptest.NewRecorder()
-		server.ServeHTTP(response, newGetScoreRequest(player))
+// 		response := httptest.NewRecorder()
+// 		server.ServeHTTP(response, newGetScoreRequest(player))
 
-		assert.Equal(t, http.StatusOK, response.Code)
-		assert.Equal(t, strconv.Itoa(num), response.Body.String())
-	})
-}
+// 		assert.Equal(t, http.StatusOK, response.Code)
+// 		assert.Equal(t, strconv.Itoa(num), response.Body.String())
+// 	})
+// }
