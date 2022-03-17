@@ -12,7 +12,7 @@ func NewLeague(rdr io.Reader) (League, error) {
 	var league League
 	err := json.NewDecoder(rdr).Decode(&league)
 	if err != nil {
-		err = fmt.Errorf("probrem parsing league: %v", err)
+		err = fmt.Errorf("probrem parsing league: %w", err)
 	}
 
 	return league, err
@@ -25,8 +25,4 @@ func (l League) Find(name string) *Player {
 		}
 	}
 	return nil
-}
-
-func (l League) Save(w io.Writer) {
-	_ = json.NewEncoder(w).Encode(l)
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"io"
 	"os"
 	"testing"
 
@@ -19,7 +18,8 @@ func TestFileSystemStore(t *testing.T) {
 	defer cleanFile()
 
 	t.Run("league from a reader", func(t *testing.T) {
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		require.NoError(t, err)
 		got := store.GetLeague()
 
 		want := League{
@@ -34,7 +34,8 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("get player score", func(t *testing.T) {
-		store := NewFileSystemPlayerStore(database)
+		store, err := NewFileSystemPlayerStore(database)
+		require.NoError(t, err)
 
 		got, _ := store.GetPlayerScore("Chris")
 		want := 33
@@ -51,7 +52,8 @@ func TestFileSystemStore(t *testing.T) {
 	`)
 		defer cleanFile()
 
-		store := NewFileSystemPlayerStore(database2)
+		store, err := NewFileSystemPlayerStore(database2)
+		require.NoError(t, err)
 
 		store.RecordWin("Chris")
 
@@ -69,7 +71,8 @@ func TestFileSystemStore(t *testing.T) {
 	`)
 		defer cleanFile()
 
-		store := NewFileSystemPlayerStore(database2)
+		store, err := NewFileSystemPlayerStore(database2)
+		require.NoError(t, err)
 
 		store.RecordWin("Pepper")
 
@@ -77,9 +80,17 @@ func TestFileSystemStore(t *testing.T) {
 		want := 1
 		assert.Equal(t, want, got)
 	})
+
+	t.Run("works with an empty file", func(t *testing.T) {
+		database, clean := createTempFile(t, "")
+		defer clean()
+
+		_, err := NewFileSystemPlayerStore(database)
+		require.NoError(t, err)
+	})
 }
 
-func createTempFile(t testing.TB, initialData string) (io.ReadWriteSeeker, func()) {
+func createTempFile(t testing.TB, initialData string) (*os.File, func()) {
 	t.Helper()
 
 	tmpfile, err := os.CreateTemp("", "db")
