@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	poker "github.com/umlx5h/learn-go-with-tests/httpserver-cli"
 )
 
 const dbFileName = "game.db.json"
@@ -14,11 +16,11 @@ func main() {
 		log.Fatalf("problem opening %s %v", dbFileName, err)
 	}
 
-	store, err := NewFileSystemPlayerStore(db)
+	store, err := poker.NewFileSystemPlayerStore(db)
 	if err != nil {
 		log.Fatalf("problem creating file system player store, %v", err)
 	}
-	server := NewPlayerServer(store)
+	server := poker.NewPlayerServer(store)
 
 	log.Fatal(http.ListenAndServe(":5555", server))
 }
