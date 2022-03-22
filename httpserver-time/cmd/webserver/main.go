@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	poker "github.com/umlx5h/learn-go-with-tests/httpserver-cli"
+	poker "github.com/umlx5h/learn-go-with-tests/httpserver-time"
 )
 
 const dbFileName = "game.db.json"

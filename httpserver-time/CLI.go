@@ -2,24 +2,40 @@ package poker
 
 import (
 	"bufio"
+	"fmt"
 	"io"
+	"strconv"
 	"strings"
 )
 
+const PlayerPrompt = "Please enter the number of players: "
+
 type CLI struct {
-	playerStore PlayerStore
-	in          *bufio.Scanner
+	in   *bufio.Scanner
+	out  io.Writer
+	game *Game
 }
 
-func NewCLI(store PlayerStore, in io.Reader) *CLI {
+func NewCLI(in io.Reader, out io.Writer, game *Game) *CLI {
 	return &CLI{
-		playerStore: store,
-		in:          bufio.NewScanner(in),
+		in:   bufio.NewScanner(in),
+		out:  out,
+		game: game,
 	}
 }
 
 func (c *CLI) PlayPoker() {
-	c.playerStore.RecordWin(extractWinner(c.readLine()))
+	fmt.Fprint(c.out, PlayerPrompt)
+
+	numberOfPlayersInput := c.readLine()
+	numberOfPlayers, _ := strconv.Atoi(strings.Trim(numberOfPlayersInput, "\n"))
+
+	c.game.Start(numberOfPlayers)
+
+	winnerInput := c.readLine()
+	winner := extractWinner(winnerInput)
+
+	c.game.Finish(winner)
 }
 
 func extractWinner(userInput string) string {
