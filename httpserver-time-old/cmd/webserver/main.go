@@ -1,9 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"os"
+	"net/http"
 
 	poker "github.com/umlx5h/learn-go-with-tests/httpserver-time"
 )
@@ -12,16 +11,13 @@ const dbFileName = "game.db.json"
 
 func main() {
 	store, close, err := poker.FileSystemPlayerStoreFromFile(dbFileName)
-
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer close()
 
-	game := poker.NewTexasHoldem(poker.BlindAlerterFunc(poker.StdOutAlerter), store)
-	cli := poker.NewCLI(os.Stdin, os.Stdout, game)
+	server := poker.NewPlayerServer(store)
 
-	fmt.Println("Let's play poker")
-	fmt.Println("Type {Name} wins to record a win")
-	cli.PlayPoker()
+	log.Fatal(http.ListenAndServe(":5555", server))
 }

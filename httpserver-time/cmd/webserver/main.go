@@ -1,23 +1,28 @@
 package main
 
 import (
+	"github.com/quii/learn-go-with-tests/command-line/v3"
 	"log"
 	"net/http"
-
-	poker "github.com/umlx5h/learn-go-with-tests/httpserver-time"
+	"os"
 )
 
 const dbFileName = "game.db.json"
 
 func main() {
-	store, close, err := poker.FileSystemPlayerStoreFromFile(dbFileName)
+	db, err := os.OpenFile(dbFileName, os.O_RDWR|os.O_CREATE, 0666)
+
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("problem opening %s %v", dbFileName, err)
 	}
 
-	defer close()
+	store, err := poker.NewFileSystemPlayerStore(db)
+
+	if err != nil {
+		log.Fatalf("problem creating file system player store, %v ", err)
+	}
 
 	server := poker.NewPlayerServer(store)
 
-	log.Fatal(http.ListenAndServe(":5555", server))
+	log.Fatal(http.ListenAndServe(":5000", server))
 }

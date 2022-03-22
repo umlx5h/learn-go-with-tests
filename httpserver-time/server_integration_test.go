@@ -3,77 +3,40 @@ package poker
 import (
 	"net/http"
 	"net/http/httptest"
-	"strconv"
-	"sync"
 	"testing"
-
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	t.Run("sync", func(t *testing.T) {
-		db, clean := createTempFile(t, `[]`)
-		defer clean()
-		store, err := NewFileSystemPlayerStore(db)
-		require.NoError(t, err)
+	database, cleanDatabase := createTempFile(t, `[]`)
+	defer cleanDatabase()
+	store, err := NewFileSystemPlayerStore(database)
 
-		server := NewPlayerServer(store)
-		player := "Pepper"
+	assertNoError(t, err)
 
-		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-		server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server := NewPlayerServer(store)
+	player := "Pepper"
 
-		t.Run("get score", func(t *testing.T) {
-			response := httptest.NewRecorder()
-			server.ServeHTTP(response, newGetScoreRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
+	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
 
-			assert.Equal(t, http.StatusOK, response.Code)
-			assert.Equal(t, "3", response.Body.String())
-		})
-
-		t.Run("get league", func(t *testing.T) {
-			response := httptest.NewRecorder()
-			server.ServeHTTP(response, newLeagueRequest())
-
-			assert.Equal(t, http.StatusOK, response.Code)
-
-			got := getLeagueFromResponse(t, response.Body)
-			want := []Player{
-				{"Pepper", 3},
-			}
-
-			assert.Equal(t, want, got)
-
-		})
-	})
-
-	t.Run("concurrently", func(t *testing.T) {
-		db, clean := createTempFile(t, `[]`)
-		defer clean()
-		store, err := NewFileSystemPlayerStore(db)
-		require.NoError(t, err)
-		server := NewPlayerServer(store)
-		player := "Pepper"
-
-		num := 1000
-
-		var wg sync.WaitGroup
-		wg.Add(num)
-		for i := 0; i < num; i++ {
-			go func() {
-				defer wg.Done()
-				server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
-			}()
-		}
-
-		wg.Wait()
-
+	t.Run("get score", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, newGetScoreRequest(player))
+		assertStatus(t, response.Code, http.StatusOK)
 
-		assert.Equal(t, http.StatusOK, response.Code)
-		assert.Equal(t, strconv.Itoa(num), response.Body.String())
+		assertResponseBody(t, response.Body.String(), "3")
+	})
+
+	t.Run("get League", func(t *testing.T) {
+		response := httptest.NewRecorder()
+		server.ServeHTTP(response, newLeagueRequest())
+		assertStatus(t, response.Code, http.StatusOK)
+
+		got := getLeagueFromResponse(t, response.Body)
+		want := []Player{
+			{"Pepper", 3},
+		}
+		assertLeague(t, got, want)
 	})
 }

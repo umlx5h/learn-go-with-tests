@@ -1,8 +1,10 @@
 package poker
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestTape_Write(t *testing.T) {
@@ -14,12 +16,11 @@ func TestTape_Write(t *testing.T) {
 	tape.Write([]byte("abc"))
 
 	file.Seek(0, 0)
-	newFileContents, _ := ioutil.ReadAll(file)
+
+	newFileContents, _ := io.ReadAll(file)
 
 	got := string(newFileContents)
 	want := "abc"
 
-	if got != want {
-		t.Errorf("got %q want %q", got, want)
-	}
+	assert.Equal(t, want, got)
 }
