@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	poker "github.com/umlx5h/learn-go-with-tests/httpserver-time"
+	poker "github.com/umlx5h/learn-go-with-tests/httpserver-websocket"
 )
 
 var dummyBlindAlerter = &poker.SpyBlindAlerter{}

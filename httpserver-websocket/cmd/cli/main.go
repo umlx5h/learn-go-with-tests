@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	poker "github.com/umlx5h/learn-go-with-tests/httpserver-time"
+	poker "github.com/umlx5h/learn-go-with-tests/httpserver-websocket"
 )
 
 const dbFileName = "game.db.json"

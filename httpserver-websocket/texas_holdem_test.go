@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	poker "github.com/umlx5h/learn-go-with-tests/httpserver-time"
+	poker "github.com/umlx5h/learn-go-with-tests/httpserver-websocket"
 )
 
 func TestGame_Start(t *testing.T) {
