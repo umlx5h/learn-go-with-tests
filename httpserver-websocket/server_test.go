@@ -1,4 +1,4 @@
-package poker
+package poker_test
 
 import (
 	"fmt"
@@ -8,9 +8,15 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/stretchr/testify/require"
+	. "github.com/umlx5h/learn-go-with-tests/httpserver-websocket"
+)
+
+var (
+	dummyGame = &GameSpy{}
 )
 
 func TestGETPlayers(t *testing.T) {
@@ -22,7 +28,7 @@ func TestGETPlayers(t *testing.T) {
 		nil,
 		nil,
 	}
-	server := NewPlayerServer(&store)
+	server := mustMakePlayerServer(t, &store, dummyGame)
 
 	t.Run("returns Pepper's score", func(t *testing.T) {
 		request := newGetScoreRequest("Pepper")
@@ -60,7 +66,7 @@ func TestStoreWins(t *testing.T) {
 		nil,
 		nil,
 	}
-	server := NewPlayerServer(&store)
+	server := mustMakePlayerServer(t, &store, dummyGame)
 
 	t.Run("it records wins on POST", func(t *testing.T) {
 		player := "Pepper"
@@ -85,7 +91,7 @@ func TestLeague(t *testing.T) {
 		}
 
 		store := StubPlayerStore{nil, nil, wantedLeague}
-		server := NewPlayerServer(&store)
+		server := mustMakePlayerServer(t, &store, dummyGame)
 
 		request := newLeagueRequest()
 		response := httptest.NewRecorder()
@@ -96,14 +102,14 @@ func TestLeague(t *testing.T) {
 
 		assertStatus(t, response, http.StatusOK)
 		assertLeague(t, got, wantedLeague)
-		assertContentType(t, response, jsonContentType)
+		assertContentType(t, response, JsonContentType)
 
 	})
 }
 
 func TestGame(t *testing.T) {
 	t.Run("GET /game returns 200", func(t *testing.T) {
-		server := NewPlayerServer(&StubPlayerStore{})
+		server := mustMakePlayerServer(t, &StubPlayerStore{}, dummyGame)
 
 		request := newGameRequest()
 		response := httptest.NewRecorder()
@@ -116,20 +122,34 @@ func TestGame(t *testing.T) {
 	t.Run("when we get message over a websocket it is a winner of a game", func(t *testing.T) {
 		store := &StubPlayerStore{}
 		winner := "Ruth"
-		server := httptest.NewServer(NewPlayerServer(store))
+		server := httptest.NewServer(mustMakePlayerServer(t, store, dummyGame))
 		defer server.Close()
 
 		wsURL := "ws" + strings.TrimPrefix(server.URL, "http") + "/ws"
 
-		ws, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
-		require.NoError(t, err, "could not open a ws connection")
-		defer ws.Close()
-
-		err = ws.WriteMessage(websocket.TextMessage, []byte(winner))
-		require.NoError(t, err, "could not send message over ws connection")
+		conn := mustDialWS(t, wsURL)
+		writeWSMessage(t, conn, winner)
 
 		AssertPlayerWin(t, store, winner)
 	})
+
+	t.Run("start a game with 3 players and declare Ruth the winner", func(t *testing.T) {
+		game := &GameSpy{}
+		winner := "Ruth"
+		server := httptest.NewServer(mustMakePlayerServer(t, dummyPlayerStore, game))
+		ws := mustDialWS(t, "ws"+strings.TrimPrefix(server.URL, "http")+"/ws")
+
+		defer server.Close()
+		defer ws.Close()
+
+		writeWSMessage(t, ws, "3")
+		writeWSMessage(t, ws, winner)
+
+		time.Sleep(10 * time.Millisecond)
+		assertGameStartedWith(t, game, 3)
+		assertFinishCalledWith(t, game, winner)
+	})
+
 }
 
 func assertContentType(t testing.TB, response *httptest.ResponseRecorder, want string) {
@@ -165,7 +185,7 @@ func assertStatus(t testing.TB, got *httptest.ResponseRecorder, want int) {
 }
 
 func newLeagueRequest() *http.Request {
-	req, _ := http.NewRequest(http.MethodGet, "/League", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/league", nil)
 	return req
 }
 
@@ -190,4 +210,28 @@ func assertResponseBody(t testing.TB, got, want string) {
 	if got != want {
 		t.Errorf("response body is wrong, got %q want %q", got, want)
 	}
+}
+
+func mustMakePlayerServer(t testing.TB, store PlayerStore, game Game) *PlayerServer {
+	server, err := NewPlayerServer(store)
+	if err != nil {
+		t.Fatal("problem creating player server: ", err)
+	}
+
+	return server
+}
+
+func mustDialWS(t *testing.T, url string) *websocket.Conn {
+	ws, _, err := websocket.DefaultDialer.Dial(url, nil)
+	require.NoError(t, err, "could not open a ws connection")
+
+	return ws
+}
+
+func writeWSMessage(t testing.TB, conn *websocket.Conn, message string) {
+	t.Helper()
+
+	err := conn.WriteMessage(websocket.TextMessage, []byte(message))
+	time.Sleep(time.Microsecond * 100)
+	require.NoError(t, err, "could not send message over ws connection")
 }

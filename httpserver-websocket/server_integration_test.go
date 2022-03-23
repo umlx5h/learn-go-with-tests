@@ -1,9 +1,11 @@
-package poker
+package poker_test
 
 import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	. "github.com/umlx5h/learn-go-with-tests/httpserver-websocket"
 )
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
@@ -13,7 +15,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 
 	assertNoError(t, err)
 
-	server := NewPlayerServer(store)
+	server, _ := NewPlayerServer(store)
 	player := "Pepper"
 
 	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
@@ -28,7 +30,7 @@ func TestRecordingWinsAndRetrievingThem(t *testing.T) {
 		assertResponseBody(t, response.Body.String(), "3")
 	})
 
-	t.Run("get League", func(t *testing.T) {
+	t.Run("get league", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, newLeagueRequest())
 		assertStatus(t, response, http.StatusOK)

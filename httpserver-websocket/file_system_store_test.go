@@ -1,9 +1,11 @@
-package poker
+package poker_test
 
 import (
 	"io/ioutil"
 	"os"
 	"testing"
+
+	. "github.com/umlx5h/learn-go-with-tests/httpserver-websocket"
 )
 
 func createTempFile(t testing.TB, initialData string) (*os.File, func()) {
